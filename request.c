@@ -28,7 +28,9 @@ struct request parse_request(FILE *f) {
 	int out_i = 0;
 	for (int i = 0; i < reqlen - 1; i++) {
 		if (line[i] == '%') {
-			char text[3] = { line[++i], line[++i], 0 };
+      int i1 = ++i;
+      int i2 = ++i;
+			char text[3] = { line[i1], line[i2], 0 };
 			url_parsed[out_i] = (char)strtol(text, NULL, 16);
 		} else {
 			url_parsed[out_i] = line[i];
