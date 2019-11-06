@@ -1,3 +1,13 @@
-chttp - an HTTP server in plain C
+chttp
 
+chttp is a simple HTTP server library developed in C.
+It allows for simple request routing.
+
+
+To-do list:
+
+ - Convert into library structure using CMake.
+ - Change error handling so that errors are sent through returning.
+ - Make function names and arguments more consistent (pointer vs not pointer on free, make_ vs _new, etc.)
+ - Add support for other request types, e.g. POST.
 
