@@ -105,4 +105,7 @@ For an example, see [test.c](test.c).
 ## TODO
 
  - Add PROPER support for other request types, e.g. POST.
+ - Add GET and POST parameter support
+ - Add routing pattern matching, e.g. "/user/&lt;userid&gt;/profile"
+ - Allow routes to filter by request method.
 
