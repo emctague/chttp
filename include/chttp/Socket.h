@@ -1,5 +1,6 @@
 #pragma once
 #include <stdio.h>
+#include "Error.h"
 
 /** TCP/IP Socket Object. */
 typedef struct Socket *Socket;
@@ -11,8 +12,8 @@ typedef void (*PFNSocketConnHandler)(FILE *io, char *client_address, int uniqueI
  * Return value is passed onto Socket_accept. */
 typedef int(*PFNSocketErrHandler)(int errno, int uniqueID, void *userPointer);
 
-/** Establish a socket listening on the given port. */
-Socket Socket_new (int port);
+/** Establish a socket listening on the given port. Returns: Result<Socket> */
+Result Socket_new (int port);
 
 /** Free a socket. */
 void Socket_free (Socket socket);

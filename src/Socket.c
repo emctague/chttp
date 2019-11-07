@@ -14,12 +14,15 @@ struct Socket {
   int connCounter; /**< Connection counter. */
 };
 
-Socket Socket_new (int port) {
+Result Socket_new (int port) {
   Socket sock = malloc(sizeof(struct Socket));
   sock->addr_len = sizeof(struct sockaddr_in);
   sock->fd = socket(AF_INET, SOCK_STREAM, 0);
   sock->connCounter = 0;
-  /* TODO: Handle error if socket->fd is 0 */
+  if (!sock->fd) {
+    free(sock);
+    return ResultError("Failed to create socket.");
+  }
 
   /* Ensure address is usable after this socket stops using it. */
   int s_true = 1;
@@ -30,13 +33,19 @@ Socket Socket_new (int port) {
   sock->address.sin_addr.s_addr = htonl(INADDR_ANY);
   sock->address.sin_port = htons(port);
 
-  bind(sock->fd, (struct sockaddr*)&sock->address, sock->addr_len);
-  /* TODO: Handle error if bind result is not 0. */
+  if (bind(sock->fd, (struct sockaddr*)&sock->address, sock->addr_len) != 0) {
+    close(sock->fd);
+    free(sock);
+    return ResultError("Failed to bind socket to address.");
+  }
 
-  listen(sock->fd, 5);
-  /* TODO: Handle error if listen result is not 0. */
+  if (listen(sock->fd, 5) != 0) {
+    close(sock->fd);
+    free(sock);
+    return ResultError("Failed to listen on port.");
+  }
 
-  return sock;
+  return ResultOK(sock);
 }
 
 

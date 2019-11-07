@@ -10,7 +10,8 @@ add_library(CHTTP
   src/Socket.c include/chttp/Socket.h
   src/StringMap.c include/chttp/StringMap.h
   src/Server.c include/chttp/Server.h
-  src/Logger.c include/chttp/Logger.h)
+  src/Logger.c include/chttp/Logger.h
+  include/chttp/Error.h)
 
 add_library(CHTTP::CHTTP ALIAS CHTTP)
 

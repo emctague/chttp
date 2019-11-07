@@ -1,6 +1,7 @@
 #pragma once
 #include "StringMap.h"
 #include <stdio.h>
+#include <string.h>
 
 
 /** HTTP Request Methods */
