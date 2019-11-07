@@ -61,14 +61,9 @@ Request Request_new(FILE *f) {
     Header_set(request, name, value);
   }
 
-  for (int i = 0; i < StringMap_size(request->headers); i++) {
-    printf("%s\n", StringMap_getNameAt(request->headers, i));
-  }
-
   /* Read body, if applicable. */
   char *clength = Header_get(request, "content-length");
   if (clength) {
-    printf("Clength: %s\n", clength);
     request->body_size = atoi(clength);
     request->body = malloc(request->body_size + 1); // 1 extra byte for a convenience null terminator
     fread(request->body, request->body_size, 1, f); 
@@ -113,10 +108,9 @@ void Response_send(Response response, FILE *f) {
   fprintf(f, "HTTP/1.1 %d No Reason\r\n", response->status);
   fprintf(f, "Content-length: %zu\r\n", response->data_size);
 
-  for (int i = 0; i < StringMap_size(response->headers); i++) {
-    char *name = StringMap_getNameAt(response->headers, i);
-    char *value = (char*)StringMap_getValueAt(response->headers, i);
-    fprintf(f, "%s: %s\r\n", name, value);
+  StringMapNode node = NULL;
+  while ((node = StringMap_iterate(response->headers, node))) {
+    fprintf(f, "%s: %s\r\n", StringMapNode_key(node), (char*)StringMapNode_value(node));
   }
 
   fprintf(f, "\r\n");

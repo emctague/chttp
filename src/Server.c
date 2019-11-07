@@ -39,6 +39,7 @@ void freeDummy(void *value) {}
 
 Server Server_new() {
   Server server = malloc(sizeof(struct Server));
+  server->doStop = 0;
   server->routes = StringMap_new(freeDummy);
   server->enableHooks = 1;
   server->verbosity = 0;
@@ -91,8 +92,9 @@ void Server_connHandler(FILE *io, char *client_address, int uniqueID, Server ser
   L_log(server->verbosity, 1, "Request { ConnID = %d, IP = %s, Method = '%d', Path = '%s' }\n", uniqueID, client_address, request->method, request->path);
 
   if (L_will_log(server->verbosity, 3)) {
-    for (int i = 0; i < StringMap_size(request->headers); i++) {
-      printf("Header { ConnID = %d, Name = '%s', Value = '%s' }\n", uniqueID, StringMap_getNameAt(request->headers, i), (char*)StringMap_getValueAt(request->headers, i));
+    StringMapNode node = NULL;
+    while ((node = StringMap_iterate(request->headers, node))) {
+      printf("Header { ConnID = %d, Name = '%s', Value = '%s' }\n", uniqueID, StringMapNode_key(node), (char*)StringMapNode_value(node));
     }
   }
 

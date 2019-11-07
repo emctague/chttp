@@ -3,6 +3,9 @@
 /** A sorted map that maps strings to an arbitrary type. */
 typedef struct StringMap *StringMap;
 
+/** A node in a StringMap, used here only during iteration. */
+typedef struct StringMapNode *StringMapNode;
+
 /** Initialize a StringMap. */
 StringMap StringMap_new(void (*nodeCleaner)(void *node));
 
@@ -15,12 +18,11 @@ void *StringMap_get(StringMap map, char *name);
 /** Free up a StringMap. */
 void StringMap_free(StringMap map);
 
-/** Get the size of the StringMap. */
-int StringMap_size(StringMap map);
+/** Iterate over a StringMap. Start with 'node' as NULL */
+StringMapNode StringMap_iterate(StringMap map, StringMapNode node);
 
-/** Get an item by index from the StringMap. */
-void *StringMap_getValueAt(StringMap map, int index);
+/** Get the value of a StringMapNode. */
+void *StringMapNode_value(StringMapNode node);
 
-/** Get an item's name by index. */
-char *StringMap_getNameAt(StringMap map, int index);
-
+/** Get the key of a StringMapNode. */
+char *StringMapNode_key(StringMapNode node);
