@@ -1,0 +1,15 @@
+get_filename_component(CHTTP_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
+include(CMakeFindDependencyMacro)
+list(APPEND CMAKE_MODULE_PATH ${CHTTP_CMAKE_DIR})
+
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
+
+list(REMOVE_AT CMAKE_MODULE_PATH -1)
+
+if(NOT TARGET CHTTP::CHTTP)
+  include("${CHTTP_CMAKE_DIR}/CHTTPTargets.cmake")
+endif()
+
+set(CHTTP_LIBRARIES CHTTP::CHTTP)
+
