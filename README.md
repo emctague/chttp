@@ -85,6 +85,11 @@ The default is `1`, and it can be changed with `Server_setHooks(server, useHooks
 
  * `request.path` contains the path being routed.
  * `Header_get(request, "name")` can be used to get the value of an HTTP Request header. Returns NULL on failure.
+ * `request.method` contains the HTTP request method being used. This can be:
+   * `HTTPMethodGET` - HTTP GET request
+   * `HTTPMethodPOST` - HTTP POST request
+   * `HTTPMethodHEAD` - HTTP HEAD request, same as GET except returns size sans-data
+   * `HTTPMethodUnknown` - Any other HTTP request method.
 
 ### Setting Response Information
 
