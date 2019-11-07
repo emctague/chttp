@@ -3,6 +3,47 @@
 chttp is a simple HTTP server library developed in C.
 It allows for simple request routing.
 
+## Basics
+
+```c
+#include <chttp/CHTTP.c>
+
+// Handler for '/' returns the client's user agent.
+Result indexHandler(Request req, Response res) {
+  Header_set(res, "Content-type", "text/html");
+
+  char *ua = Header_get(req, "User-agent");
+  Response_printf(res, "Your user-agent is: <b>%s</b>", ua);
+
+  return ResultOK(NULL)
+}
+
+// Handler for Error 404
+Result errorHandler404(Request req, Response res) {
+  Header_set(res, "Content-type", "text/html");
+  Response_printf(res, "<h1>Error 404</h1><b>Route Not Found</b>");
+  return ResultOK(NULL);
+}
+
+int main () {
+  // Create a server.
+  Server server = Server_new();
+
+  // Set up a route.
+  Server_route(server, "/", indexHandler);
+  
+  // Set up Error 404 Handler
+  Server_route404(server, errorHandler404);
+
+  // Try to listen on port 8080, or handle the error if one occurs.
+  // The first argument to OkOr is the result type on success - Server_listen
+  // doesn't return anything meaningful, so we set it to void*.
+  OkOr(void*, (Server_listen(server, 8080)), {
+      fprintf(stderr, "Error in Server_listen: %s\n", OkOrMessage);
+  });
+}
+```
+
 ## Usage
 
 chttp can be included with:
@@ -85,6 +126,7 @@ The default is `1`, and it can be changed with `Server_setHooks(server, useHooks
 
  * `request.path` contains the path being routed.
  * `Header_get(request, "name")` can be used to get the value of an HTTP Request header. Returns NULL on failure.
+   All headers are in **lowercase**, and Header_get is case-sensitive!
  * `request.method` contains the HTTP request method being used. This can be:
    * `HTTPMethodGET` - HTTP GET request
    * `HTTPMethodPOST` - HTTP POST request
@@ -96,7 +138,7 @@ The default is `1`, and it can be changed with `Server_setHooks(server, useHooks
  * `response.status` contains the HTTP response status code. This defaults to 200, except within error handlers.
  * `Response_write(response, void *buffer, size_t size)` can append information to the response body.
  * `Response_printf(response, "format string", ...)` can append text to the response body, using the same format as `printf`.
- * `Header_set(response, "name", "value")` can set a response header.
+ * `Header_set(response, "name", "value")` can set a response header. All headers must be in LOWERCASE.
 
 ## Example
 
@@ -108,4 +150,8 @@ For an example, see [test.c](test.c).
  - Add GET and POST parameter support
  - Add routing pattern matching, e.g. "/user/&lt;userid&gt;/profile"
  - Allow routes to filter by request method.
+
+## Existing Errors
+
+StringMap type is broken - insertion does not occur in proper order. No idea why, though, everything seems fine.
 

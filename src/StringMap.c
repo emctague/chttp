@@ -39,11 +39,13 @@ void StringMap_set(StringMap map, char *name, void *value) {
   char **found = bsearch(&state, map->names, map->size, sizeof(char*), StringMap_strcmp);
 
   if (found) {
+    printf("updating: %s\n", name);
     /* When we *did* find the item, update it. */
     int index = (found - map->names) / sizeof(char*);
     map->nodeCleaner(map->values[index]);
     map->values[index] = value;
   } else {
+    printf("inserting: %s\n", name);
     /* Otherwise, we need to insert. */
     int index;
 
@@ -74,7 +76,9 @@ void StringMap_set(StringMap map, char *name, void *value) {
 void *StringMap_get(StringMap map, char *name) {
   StringMap_searchState searchState = { name, map->names };
   char **found = bsearch(&searchState, map->names, map->size, sizeof(char*), StringMap_strcmp);
+  printf("searching: %s\n", name);
   if (found) {
+    printf("found: %s\n", name);
     return map->values[(found - map->names) / sizeof(char*)];
   } else return NULL;
 }

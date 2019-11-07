@@ -2,10 +2,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
+#include <ctype.h>
 
 Request Request_new(FILE *f) {
   Request request = malloc(sizeof(struct Request));
   request->headers = StringMap_new(free);
+  request->body_size = 0;
+  request->body = NULL;
 
   char *line = NULL;
   size_t read = 0;
@@ -48,8 +51,28 @@ Request Request_new(FILE *f) {
   while (getline(&line, &read, f)) {
     if (!strcmp(line, "\r\n")) break;
     char *name = strtok(line, ": ");
-    char *value = strtok(line, "\r\n");
+    char *value = strtok(NULL, "\r\n");
+
+    // Make headers lowercase
+    int namelen = strlen(name);
+    for (int i = 0; i < namelen; i++) {
+      name[i] = tolower(name[i]);
+    }
     Header_set(request, name, value);
+  }
+
+  for (int i = 0; i < StringMap_size(request->headers); i++) {
+    printf("%s\n", StringMap_getNameAt(request->headers, i));
+  }
+
+  /* Read body, if applicable. */
+  char *clength = Header_get(request, "content-length");
+  if (clength) {
+    printf("Clength: %s\n", clength);
+    request->body_size = atoi(clength);
+    request->body = malloc(request->body_size + 1); // 1 extra byte for a convenience null terminator
+    fread(request->body, request->body_size, 1, f); 
+    ((char*)request->body)[request->body_size] = '\0';
   }
 
   free(line);

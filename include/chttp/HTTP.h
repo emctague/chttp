@@ -18,6 +18,8 @@ typedef struct Request {
   HTTPMethod method; /**< Request method. */
   char *path; /**< Request path. */
   StringMap headers; /**< StringMap of HTTP headers. */
+  void *body; /**< Request body, if included. */
+  size_t body_size; /**< Request body size. */
 } *Request;
 
 
@@ -48,7 +50,6 @@ void Response_printf(Response response, const char *fmt, ...);
 
 /** Send a response and then free it. */
 void Response_send(Response response, FILE *f);
-
 
 /** Set an HTTP header on a request or response object. */
 #define Header_set(OBJECT, NAME, VALUE) StringMap_set(OBJECT->headers, NAME, (void*)strdup(VALUE))
