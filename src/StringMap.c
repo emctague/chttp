@@ -19,63 +19,64 @@ StringMap StringMap_new(void (*nodeCleaner)(void *node)) {
   return map;
 };
 
-
+/* Represents the state of a bsearch binary search. Keeps track of last-visited key. */
 typedef struct {
-  int exists, pos;
-} BinaryResult;
+  char *key;
+  char **lastVisited;
+} StringMap_searchState;
 
-BinaryResult StringMap_binarySearch(char **list, int size, char *name) {
-  int left = 0;
-  int right = size - 1;
-  int mid = 0;
-  int ord = 0;
-
-  if (size == 0) return (BinaryResult){0, 0};
-  else if (size == 1) {
-    ord = strcmp(list[0], name);
-    return (BinaryResult){!ord, ord > 0 ? mid : mid + 1};
-  }
-
-  while (left <= right) {
-    mid = (left + right) / 2;
-    ord = strcmp(list[mid], name);
-    if (ord == 0) return (BinaryResult){1, mid};
-    else if (ord > 0) right = mid - 1;
-    else left = mid + 1;
-  }
-
-  return (BinaryResult){0, ord > 0 ? mid : mid + 1};
+/* Strcmp two strings and update search state - used for bsearch. */
+int StringMap_strcmp(const void *a, const void *b) {
+  StringMap_searchState *state = (StringMap_searchState*)a;
+  state->lastVisited = (char**)b;
+  return strcmp(state->key, *(const char**)b);
 }
 
 
 void StringMap_set(StringMap map, char *name, void *value) {
-  BinaryResult putAt = StringMap_binarySearch(map->names, map->size, name);
+  /* Search for the name in the map, but keep track of last-visited item, too. */
+  StringMap_searchState state = { name, map->names };
+  char **found = bsearch(&state, map->names, map->size, sizeof(char*), StringMap_strcmp);
 
-  if (putAt.exists) {
-    map->nodeCleaner(map->values[putAt.pos]);
-    map->values[putAt.pos] = value;
+  if (found) {
+    /* When we *did* find the item, update it. */
+    int index = (found - map->names) / sizeof(char*);
+    map->nodeCleaner(map->values[index]);
+    map->values[index] = value;
   } else {
+    /* Otherwise, we need to insert. */
+    int index;
+
+    /* If the map is empty our index is zero. */
+    if (map->size == 0) index = 0;
+    else {
+      /* If the map is NOT empty, we select an insertion point depending on the last-checked value. */
+      index = (state.lastVisited - map->names) / sizeof(char*);
+      if (strcmp(map->values[index], name) > 0) index++;
+    }
+
     map->names = realloc(map->names, (map->size + 1) * sizeof(char*));
     map->values = realloc(map->values, (map->size + 1) * sizeof(void*));
 
-    for (int i = map->size; i > putAt.pos; i--) {
+    for (int i = map->size; i > index; i--) {
       map->names[i] = map->names[i - 1];
       map->values[i] = map->values[i - 1];
       map->names[i - 1] = 0;
     }
 
-    map->names[putAt.pos] = strdup(name);
-    map->values[putAt.pos] = value;
+    map->names[index] = strdup(name);
+    map->values[index] = value;
     map->size++;
   }
 }
 
 
 void *StringMap_get(StringMap map, char *name) {
-  BinaryResult found = StringMap_binarySearch(map->names, map->size, name);
-
-  if (found.exists) return map->values[found.pos];
-  else return NULL;
+  StringMap_searchState searchState = { name, map->names };
+  char **found = bsearch(&searchState, map->names, map->size, sizeof(char*), StringMap_strcmp);
+  if (found) {
+    return map->values[(found - map->names) / sizeof(char*)];
+  } else return NULL;
 }
 
 

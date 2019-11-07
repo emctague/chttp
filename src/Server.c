@@ -5,7 +5,6 @@
 #include <string.h>
 #include <signal.h>
 #include <stdlib.h>
-#include <time.h>
 #include <chttp/Logger.h>
 
 /* Default error 500 handler. */
@@ -133,18 +132,6 @@ int Server_errHandler(int errno, int uniqueID, Server server) {
 }
 
 Result Server_listen(Server server, int port) {
-  /* Our StringMap implementation fails to find routes if there are fewer than 2, so we establish a dummy route with a partially-random name. */
-  if (StringMap_size(server->routes) < 2) {
-    L_log(server->verbosity, 2, "At least 2 routes need to be specified, so mapping randomized dummy route...\n");
-    srand(time(0));
-    char buf[] = "/XXXXXXXXXX__incredibly__long__chttp__dummy__url__returns__404__";
-    for (int i = 1; i < 11; i++) {
-      buf[i] = ' ' + rand() % 75;
-    }
-
-    Server_route(server, buf, Server_default404Handler);
-  }
-
   Socket socket = OkOr(Socket, (Socket_new(port)), { return OkOrResult; });
 
   if (server->enableHooks) {

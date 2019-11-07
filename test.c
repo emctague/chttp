@@ -15,6 +15,8 @@ int main (int argc, char **argv) {
   Server server = Server_new();
   Server_setVerbosity(server, 3);
   Server_route(server, "/", handler);
+  Server_route(server, "/oof", handler);
+  Server_route(server, "/aaf", handler);
   Server_route404(server, handler404); 
   OkOr(void*, (Server_listen(server, 8080)), {
     fprintf(stderr, "%s\n", OkOrMessage);
