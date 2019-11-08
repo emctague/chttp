@@ -1,11 +1,11 @@
 #include <chttp/Server.h>
 #include <chttp/Socket.h>
-#include <chttp/StringMap.h>
 #include <errno.h>
 #include <string.h>
 #include <signal.h>
 #include <stdlib.h>
 #include <chttp/Logger.h>
+#include "thirdparty/uthash.h"
 
 /* Default error 500 handler. */
 Result Server_default500Handler(Request req, Response res) {
@@ -19,8 +19,14 @@ Result Server_default404Handler(Request req, Response res) {
   return ResultOK(NULL);
 }
 
+typedef struct Route {
+  char *key;
+  PFNRouteHandler value;
+  UT_hash_handle hh;
+} *Route;
+
 struct Server {
-  StringMap routes;
+  Route *routes;
   Verbosity verbosity;
   int enableHooks;
   int doStop;
@@ -40,7 +46,7 @@ void freeDummy(void *value) {}
 Server Server_new() {
   Server server = malloc(sizeof(struct Server));
   server->doStop = 0;
-  server->routes = StringMap_new(freeDummy);
+  server->routes = NULL;
   server->enableHooks = 1;
   server->verbosity = 0;
   server->handle500 = Server_default500Handler;
@@ -69,7 +75,11 @@ void Server_route500(Server server, PFNRouteHandler handler) {
 
 void Server_route(Server server, char *path, PFNRouteHandler handler) {
   L_log(server->verbosity, 2, "Route mapped: %s\n", path);
-  StringMap_set(server->routes, path, (void*)handler);
+
+  Route r = malloc(sizeof(struct Route));
+  r->key = strdup(key);
+  r->value = value;
+  HASH_ADD_KEYPTR(hh, server->routes, r->key, strlen(r->key), r);
 }
 
 void Server_stop(Server server) {
@@ -98,7 +108,10 @@ void Server_connHandler(FILE *io, char *client_address, int uniqueID, Server ser
     }
   }
 
-  PFNRouteHandler handler = (PFNRouteHandler)StringMap_get(server->routes, request->path);
+  Route found = NULL;
+  HASH_FIND_STR(server->routes, request->path, found);
+
+  PFNRouteHandler handler = found ? found->value : NULL;
 
   Response response = Response_new();
 
@@ -155,6 +168,13 @@ Result Server_listen(Server server, int port) {
   L_log(server->verbosity, 1, "Stopped Listening");
 
   Socket_free(socket);
-  StringMap_free(server->routes);
+
+  Route r, tmp;
+  HASH_ITER(hh, server->routes, r, tmp) {
+    free(r->name);
+    HASH_DEL(server->routes, r);
+    free(r);
+  }
+
   return ResultOK(NULL);
 }
