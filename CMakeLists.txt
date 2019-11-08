@@ -8,7 +8,6 @@ find_package(Threads REQUIRED)
 add_library(CHTTP
   src/HTTP.c include/chttp/HTTP.h
   src/Socket.c include/chttp/Socket.h
-  src/StringMap.c include/chttp/StringMap.h
   src/Server.c include/chttp/Server.h
   src/Logger.c include/chttp/Logger.h
   include/chttp/Error.h)

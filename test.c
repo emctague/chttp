@@ -1,12 +1,13 @@
 #include <chttp/CHTTP.h>
 
 Result handler(Request req, Response res) {
+  printf("Header: %s\n", Header_get(&req->headers, "user-agent"));
   Response_printf(res, "Request body: (%d) '%s'\n", req->body_size, (char*)req->body);
   return ResultOK(NULL);
 }
 
 Result handler404(Request req, Response res) {
-  Header_set(res, "content-type", "text/html");
+  Header_set(&res->headers, "content-type", "text/html");
   Response_printf(res, "<h1>Error 404 - Not Found</h1>");
   return ResultOK(NULL);
 }

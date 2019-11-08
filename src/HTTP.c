@@ -1,12 +1,21 @@
+#define _WITH_GETLINE
 #include <chttp/HTTP.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
 #include <ctype.h>
+#include <stdio.h>
+#include "thirdparty/uthash.h"
+
+struct Header {
+  char *name;
+  char *value;
+  UT_hash_handle hh;
+};
 
 Request Request_new(FILE *f) {
   Request request = malloc(sizeof(struct Request));
-  request->headers = StringMap_new(free);
+  request->headers = NULL;
   request->body_size = 0;
   request->body = NULL;
 
@@ -58,11 +67,12 @@ Request Request_new(FILE *f) {
     for (int i = 0; i < namelen; i++) {
       name[i] = tolower(name[i]);
     }
-    Header_set(request, name, value);
+
+    Header_set(&request->headers, name, value);
   }
 
   /* Read body, if applicable. */
-  char *clength = Header_get(request, "content-length");
+  char *clength = Header_get(&request->headers, "content-length");
   if (clength) {
     request->body_size = atoi(clength);
     request->body = malloc(request->body_size + 1); // 1 extra byte for a convenience null terminator
@@ -76,7 +86,14 @@ Request Request_new(FILE *f) {
 
 void Request_free(Request request) {
   free(request->path);
-  StringMap_free(request->headers);
+
+  Header r, tmp;
+  HASH_ITER(hh, request->headers, r, tmp) {
+    HASH_DEL(request->headers, r);
+    free(r->name);
+    free(r->value);
+    free(r);
+  }
 }
 
 Response Response_new() {
@@ -84,7 +101,7 @@ Response Response_new() {
   response->status = 200;
   response->data = NULL;
   response->data_size = 0;
-  response->headers = StringMap_new(free);
+  response->headers = NULL;
   return response;
 }
 
@@ -108,16 +125,40 @@ void Response_send(Response response, FILE *f) {
   fprintf(f, "HTTP/1.1 %d No Reason\r\n", response->status);
   fprintf(f, "Content-length: %zu\r\n", response->data_size);
 
-  StringMapNode node = NULL;
-  while ((node = StringMap_iterate(response->headers, node))) {
-    fprintf(f, "%s: %s\r\n", StringMapNode_key(node), (char*)StringMapNode_value(node));
+  Header r, tmp;
+  HASH_ITER(hh, response->headers, r, tmp) {
+    fprintf(f, "%s: %s\r\n", r->name, r->value);
+    HASH_DEL(response->headers, r);
+    free(r->name);
+    free(r->value);
+    free(r);
   }
 
   fprintf(f, "\r\n");
   fwrite(response->data, response->data_size, 1, f);
 
   free(response->data);
-  StringMap_free(response->headers);
   free(response);
+}
+
+char *Header_get(Header *object, char *name) {
+  Header r = NULL;
+  HASH_FIND_STR(*object, name, r);
+  if (r) return r->value;
+  else return NULL;
+}
+
+void Header_set(Header *object, char *name, char *value) {
+  Header r = NULL;
+  HASH_FIND_STR(*object, name, r);
+  if (r) {
+    free(r->value);
+    r->value = strdup(value);
+  } else {
+    r = malloc(sizeof(struct Header));
+    r->name = strdup(name);
+    r->value = strdup(value);
+    HASH_ADD_KEYPTR(hh, *object, r->name, strlen(r->name), r);
+  }
 }
 

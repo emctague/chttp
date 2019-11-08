@@ -10,9 +10,9 @@ It allows for simple request routing.
 
 // Handler for '/' returns the client's user agent.
 Result indexHandler(Request req, Response res) {
-  Header_set(res, "Content-type", "text/html");
+  Header_set(&res->headers, "Content-type", "text/html");
 
-  char *ua = Header_get(req, "User-agent");
+  char *ua = Header_get(&req->headers, "User-agent");
   Response_printf(res, "Your user-agent is: <b>%s</b>", ua);
 
   return ResultOK(NULL)
@@ -20,7 +20,7 @@ Result indexHandler(Request req, Response res) {
 
 // Handler for Error 404
 Result errorHandler404(Request req, Response res) {
-  Header_set(res, "Content-type", "text/html");
+  Header_set(&res->headers, "Content-type", "text/html");
   Response_printf(res, "<h1>Error 404</h1><b>Route Not Found</b>");
   return ResultOK(NULL);
 }
@@ -125,7 +125,7 @@ The default is `1`, and it can be changed with `Server_setHooks(server, useHooks
 ### Checking Request Information
 
  * `request.path` contains the path being routed.
- * `Header_get(request, "name")` can be used to get the value of an HTTP Request header. Returns NULL on failure.
+ * `Header_get(&request->headers, "name")` can be used to get the value of an HTTP Request header. Returns NULL on failure.
    All headers are in **lowercase**, and Header_get is case-sensitive!
  * `request.method` contains the HTTP request method being used. This can be:
    * `HTTPMethodGET` - HTTP GET request
@@ -138,7 +138,7 @@ The default is `1`, and it can be changed with `Server_setHooks(server, useHooks
  * `response.status` contains the HTTP response status code. This defaults to 200, except within error handlers.
  * `Response_write(response, void *buffer, size_t size)` can append information to the response body.
  * `Response_printf(response, "format string", ...)` can append text to the response body, using the same format as `printf`.
- * `Header_set(response, "name", "value")` can set a response header. All headers must be in LOWERCASE.
+ * `Header_set(&response->headers, "name", "value")` can set a response header. All headers must be in LOWERCASE.
 
 ## Example
 

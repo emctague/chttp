@@ -26,7 +26,7 @@ typedef struct Route {
 } *Route;
 
 struct Server {
-  Route *routes;
+  Route routes;
   Verbosity verbosity;
   int enableHooks;
   int doStop;
@@ -77,8 +77,8 @@ void Server_route(Server server, char *path, PFNRouteHandler handler) {
   L_log(server->verbosity, 2, "Route mapped: %s\n", path);
 
   Route r = malloc(sizeof(struct Route));
-  r->key = strdup(key);
-  r->value = value;
+  r->key = strdup(path);
+  r->value = handler;
   HASH_ADD_KEYPTR(hh, server->routes, r->key, strlen(r->key), r);
 }
 
@@ -101,12 +101,12 @@ void Server_connHandler(FILE *io, char *client_address, int uniqueID, Server ser
   Request request = Request_new(io);
   L_log(server->verbosity, 1, "Request { ConnID = %d, IP = %s, Method = '%d', Path = '%s' }\n", uniqueID, client_address, request->method, request->path);
 
-  if (L_will_log(server->verbosity, 3)) {
+  /*if (L_will_log(server->verbosity, 3)) {
     StringMapNode node = NULL;
     while ((node = StringMap_iterate(request->headers, node))) {
       printf("Header { ConnID = %d, Name = '%s', Value = '%s' }\n", uniqueID, StringMapNode_key(node), (char*)StringMapNode_value(node));
     }
-  }
+  } TODO REIMPLEMENT WITH UTHASH */
 
   Route found = NULL;
   HASH_FIND_STR(server->routes, request->path, found);
@@ -171,8 +171,8 @@ Result Server_listen(Server server, int port) {
 
   Route r, tmp;
   HASH_ITER(hh, server->routes, r, tmp) {
-    free(r->name);
     HASH_DEL(server->routes, r);
+    free(r->key);
     free(r);
   }
 

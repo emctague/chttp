@@ -1,5 +1,4 @@
 #pragma once
-#include "StringMap.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -12,12 +11,14 @@ typedef enum HTTPMethod {
   HTTPMethodUnknown
 } HTTPMethod;
 
+/** HTTP Header */
+typedef struct Header *Header;
 
 /** HTTP Request */
 typedef struct Request {
   HTTPMethod method; /**< Request method. */
   char *path; /**< Request path. */
-  StringMap headers; /**< StringMap of HTTP headers. */
+  Header headers; /**< Hash table of HTTP headers. */
   void *body; /**< Request body, if included. */
   size_t body_size; /**< Request body size. */
 } *Request;
@@ -28,7 +29,7 @@ typedef struct Response {
   int status; /**< Response status code. */
   void *data; /**< Response data. */
   size_t data_size; /**< Response data size. */
-  StringMap headers; /**< StringMap of HTTP headers. */
+  Header headers; /**< Hash table of HTTP headers. */
 } *Response;
 
 
@@ -51,9 +52,9 @@ void Response_printf(Response response, const char *fmt, ...);
 /** Send a response and then free it. */
 void Response_send(Response response, FILE *f);
 
-/** Set an HTTP header on a request or response object. */
-#define Header_set(OBJECT, NAME, VALUE) StringMap_set(OBJECT->headers, NAME, (void*)strdup(VALUE))
+/** Update an HTTP Header on the given headers list. */
+void Header_set(Header *object, char *name, char *value);
 
-/** Get an HTTP header on a request or response object. */
-#define Header_get(OBJECT, NAME) ((char*) StringMap_get(OBJECT->headers, NAME))
+/** Get an HTTP Header on the given headers list. */
+char *Header_get(Header *object, char *name);
 
