@@ -3,6 +3,8 @@
 chttp is a simple HTTP server library developed in C.
 It allows for simple request routing.
 
+It is currently being developed and tested on **MacOS** and **FreeBSD**.
+
 ## Basics
 
 ```c
